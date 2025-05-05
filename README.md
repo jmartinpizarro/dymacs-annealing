@@ -36,7 +36,20 @@ cmake \
 ```sh
 cd .. 
 make roadmap
-``
+```
+
+# Execution #
+
+Execution example with the NY dataset.
+
+```sh
+./domains/roadmap/roadmap \
+  --graph domains/roadmap/benchmark/USA-road-d.NY.gr \
+  --file  domains/roadmap/benchmark/USA-road-d.NY.test \
+  --solver belA0 \
+  --variant dimacs \
+  --k 1000
+```
 
 # Tests #
 
