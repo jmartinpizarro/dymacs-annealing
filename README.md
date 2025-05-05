@@ -24,56 +24,19 @@ To download the code type the following:
 
 To compile the source code, create first the `Makefile` with:
 
-``` sh
-    $ cmake . -DCMAKE_BUILD_TYPE=Release
-    $ make
+```sh
+mkdir build && cd build
+cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DDATA_NY=ON \
+  -D7ZIP_LOCATION=$(which 7z) \
+  ..
 ```
 
-from the `ksearch/` directory created after the clone. It will build the
-library, a solver for every domain defined under `domains/`, along with a random
-generator for it , and all the unit tests.
-
-It is also possible to compile separately different parts of the whole bundle.
-To compile only the library do:
-
-``` sh
-   $ make ksearch
-```
-
-which generates a static library.
-
-To generate an executable to solve instances in a specific domain use `make 
-domain` where *domain* can be any of the following: `grid`, `map`, `npancake`,
-`npuzzle` or `roadmap`.
-
-Finally, all domains (but *grid*) come with their own random generator of
-instances. To generate them execute `make gen-domain` where *domain* can be any
-of the following: `map`, `npancake`, `npuzzle` or `roadmap`.
-
-## Additional CMake Options
-
-Various CMake options are available that automatically download datafiles for some domains.
-* `-DDATA_ALL`: downloads all data files for the roadmap domain to `domains/roadmap/benchmark`.
-* `-DDATA_*`: downloads the data files for specific maps in the roadmap domain to `domains/roadmap/benchmark`.
-  + `-DDATA_USA`: Full USA
-  + `-DDATA_CTR`: Central USA
-  + `-DDATA_W`: Western USA
-  + `-DDATA_E`: Eastern USA
-  + `-DDATA_LKS`: Great Lakes
-  + `-DDATA_CAL`: California and Nevada
-  + `-DDATA_NE`: Northeast USA
-  + `-DDATA_NW`: Northwest USA
-  + `-DDATA_FLA`: Florida
-  + `-DDATA_COL`: Colorado
-  + `-DDATA_BAY`: San Fransisco Bay Area
-  + `-DDATA_NY`: New York City
-
-**NOTE:** An installation of 7zip, Gunzip, or gzip is needed for automatic downloads to work. If your installation is 
-not in a default location, a path can be provided through the following CMake options:
-* `-D7ZIP_LOCATION`: Path to 7zip executable
-* `-DGUNZIP_LOCATION`: Path to Gunzip executable
-* `-DGZIP_LOCATION`: Path to gzip executable
-
+```sh
+cd .. 
+make roadmap
+``
 
 # Tests #
 
