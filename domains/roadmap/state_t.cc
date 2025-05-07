@@ -1,3 +1,4 @@
+#include "state_t.h"
 #include "graph_t.h"
 
 using namespace std;
@@ -5,7 +6,7 @@ using namespace std;
 // add a new vertex to the graph. It returns true if the vertex was effectively
 // added and false otherwise (e.g., because it exceeds the overall capacity of
 // the graph)
-bool graph_t::add_vertex (size_t vertex) {
+bool state_t::add_vertex (size_t vertex) {
 
     // first, ensure the vertex can be allocated both in the container of
     // vertices and the adjacency matrix. If not, return false right away
@@ -34,11 +35,11 @@ bool graph_t::add_vertex (size_t vertex) {
 
 // add a new edge to the graph. In case the operation is not feasible, it
 // immediately raises an exception. Otherwise, it returns nothing
-void graph_t::add_edge (size_t from, size_t to, int weight) {
+void state_t::add_edge (size_t from, size_t to, int weight) {
 
     // Make sure the from vertex exists
     if (!add_vertex (from)) {
-        throw std::range_error ("[graph_t::add_edge] It was not possible to add the starting vertex");
+        throw std::range_error ("[state_t::add_edge] It was not possible to add the starting vertex");
     }
 
     // even if it is not going to be used by this edge, ensure the to vertex
@@ -60,7 +61,7 @@ void graph_t::add_edge (size_t from, size_t to, int weight) {
     _nbedges++;
 }
 
-bool state_t::modify_vertex(size_t new_vertex, size_t idx){
+bool state_t::modify_vertex(vertex_t new_vertex, size_t idx){
 
     // ensure that the vertex exists
     if (idx >= _vertices.size()){

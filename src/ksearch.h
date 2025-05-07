@@ -14,7 +14,7 @@
 #define _KSEARCH_H_
 
 // definitions
-#define CMAKE_BUILD_TYPE "Release"
+#define CMAKE_BUILD_TYPE "Debug"
 #define CMAKE_VERSION "1.6"
 
 // ***initialization ***

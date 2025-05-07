@@ -4,7 +4,8 @@ add_executable (roadmap
   ../helpers.cc
   graph_t.cc
   roadmap_t.cc
-  roadmap.cc)
+  roadmap.cc
+  state_t.cc)
 
 target_link_libraries (roadmap LINK_PUBLIC ksearch)
 
@@ -13,7 +14,8 @@ add_executable (gen-roadmap
   getopt.c
   graph_t.cc
   roadmap_t.cc
-  generator.cc)
+  generator.cc
+  state_t.cc)
 
 target_link_libraries (gen-roadmap LINK_PUBLIC ksearch)
 

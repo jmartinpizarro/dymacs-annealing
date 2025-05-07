@@ -3,7 +3,6 @@
 #ifndef STATE_T
 #define STATE_T
 
-#include <map>
 #include <vector>
 
 #include "graph_t.h"
@@ -17,8 +16,8 @@ class state_t {
     private:
 
         graph_t* _original_graph; // pointer to original graph
-        size_t _nebedges;
-        std::vector<std:vector<edge_t>> _edges;
+        size_t _nbedges;
+        std::vector<std::vector<edge_t>> _edges;
         std::vector<vertex_t> _vertices; 
 
     public:
@@ -31,10 +30,6 @@ class state_t {
             _edges {std::vector<std::vector<edge_t>>()},
             _vertices {std::vector<vertex_t>()}
             {}
-
-        // move and copy are forbidden
-        graph_t (const graph_t& other) = delete;
-        graph_t (graph_t&& other) = delete;
 
         // getters
         const size_t get_nbedges () const { return _nbedges; }
@@ -56,7 +51,7 @@ class state_t {
 
         // modifies the coordinates of a vector. It returns true if the vertex
         // correctly modified, false otherwise
-        bool modify_vertex (size_t new_vertex, size_t idx);
+        bool modify_vertex (vertex_t new_vertex, size_t idx);
 
         // mutates the state To Define how.
         void mutate();
