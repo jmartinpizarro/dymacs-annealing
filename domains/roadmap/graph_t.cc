@@ -74,6 +74,10 @@ void graph_t::add_edge (size_t from, size_t to, int weight) {
     _nbedges++;
 }
 
+void graph_t::modify_vertex(int& id, double longitude, double latitude) {
+    _vertices[id] = vertex_t(longitude, latitude);
+}
+
 // load a graph from a file with the format of the 9th DIMACS competition, and
 // stores the location of each vertex according to the given coordinates given
 // in radians. It returns the number of edges processed

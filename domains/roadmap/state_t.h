@@ -51,13 +51,14 @@ class state_t {
 
         // modifies the coordinates of a vector. It returns true if the vertex
         // correctly modified, false otherwise
-        bool modify_vertex (vertex_t new_vertex, size_t idx);
+        void modify_vertex (int& node_id, double longitude, double latitude);
 
-        // mutates the state To Define how.
-        void mutate();
+        // randomly displace one vertex, returns <node_id, old_vertex>
+        std::pair<size_t,vertex_t> mutate();
 
-        // evaluates an state in order to detect if it must mutate or not. To Define how.
-        double evaluate();
+        // evaluates an state in order to detect if mutation has been useful
+        // or not
+        double evaluate(std::map<int,int>* violations);
 
 }; // class state_t
 

@@ -136,6 +136,10 @@ public:
     // immediately raises an exception. Otherwise, it returns nothing
     void add_edge (size_t from, size_t to, int weight);
 
+    // modifies the coordinates of a vector. It returns true if the vertex
+    // correctly modified, false otherwise
+    void modify_vertex (int& node_id, double longitude, double latitude);
+
     // clear entire erases the graph
     void clear () {
         _nbedges = 0;

@@ -1,5 +1,10 @@
+#include <utility>
+#include <random>
+
 #include "state_t.h"
 #include "graph_t.h"
+#include "utils.h"
+#include "annealing.h"
 
 using namespace std;
 
@@ -61,14 +66,60 @@ void state_t::add_edge (size_t from, size_t to, int weight) {
     _nbedges++;
 }
 
-bool state_t::modify_vertex(vertex_t new_vertex, size_t idx){
+void state_t::modify_vertex(int& id, double longitude, double latitude) {
+    _vertices[id] = vertex_t(longitude, latitude);
+}
 
-    // ensure that the vertex exists
-    if (idx >= _vertices.size()){
-        return false;
+// Mutate: randomly displace one vertex, returns <node_id, old_vertex>
+std::pair<size_t,vertex_t> state_t::mutate() {
+
+    // RNG static to preserve seed across calls
+    static std::mt19937_64 rng(std::random_device{}());
+    std::uniform_int_distribution<size_t> uniNode(0, _vertices.size()-1);
+    std::uniform_real_distribution<double> uniVar(
+        -COORDINATES_MAX_VARIATION,
+        COORDINATES_MAX_VARIATION
+    );
+
+    size_t node_id = uniNode(rng);
+    vertex_t old_v = _vertices[node_id];
+
+    // Apply small random offset
+    double dlon = uniVar(rng);
+    double dlat = uniVar(rng);
+
+    _vertices[node_id] = vertex_t(
+        old_v.get_longitude() + dlon,
+        old_v.get_latitude()  + dlat
+    );
+
+    return {node_id, old_v};
+}
+
+// evaluates an state in order to detect if mutation has been useful
+// or not
+double state_t::evaluate(std::map<int,int>* violations) {
+    // reconstruct the graph class
+    graph_t temp;
+    size_t N = _vertices.size();
+    for (int i = 0; i < N; ++i) {
+
+        temp.add_vertex(i);
+        temp.modify_vertex(i,
+            _vertices[i].get_longitude(),
+            _vertices[i].get_latitude()
+        );
     }
 
-    // update the new coordinate
-    _vertices[idx] = new_vertex;
-    return true;
+    for (size_t u = 0; u < N; ++u) {
+
+        for (auto const& e : _edges[u]) {
+            temp.add_edge(u, e.get_to(), e.get_weight());
+        }
+    }
+
+    violations->clear();
+    int cost = objective_function(&temp, violations);
+    return static_cast<double>(cost);
 }
+
