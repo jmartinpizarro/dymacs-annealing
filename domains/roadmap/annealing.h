@@ -4,8 +4,10 @@
 #define ANNEALING_H
 
 #include <map>
+#include <vector>
 
 #include "graph_t.h"
+#include "state_t.h"
 
 constexpr int BATCHES = 200; // maximum size of any subgraph
 constexpr int MAX_ITERS = 10000; // if no improvements after, HALT
@@ -25,5 +27,8 @@ double acceptance_criteria(int new_cost, int old_cost, double t_current);
 // new files for graph processing (again following the dymacs version)
 int annealing(graph_t* g);
 
+// Given the original graph, returns an array of states populated 
+// with the subgraphs
+std::vector<state_t> generateStates(const graph_t& g);
 
 #endif // ANNEALING_H

@@ -31,6 +31,7 @@
 #include "../../src/ksearch.h"
 
 #include "roadmap_t.h"
+#include "annealing.h"
 
 #define EXIT_OK 0
 #define EXIT_FAILURE 1
@@ -109,14 +110,6 @@ int main (int argc, char** argv) {
         exit (EXIT_FAILURE);
     }
 
-    // process the solver names and get a vector with the signatures of all
-    // solvers to execute
-    vector<string> solvers = split_solver (solver_name);
-
-    // and also process the user selection of the K values
-    auto kspec = split_ks (k_params);
-
-    // parameter checking
 
     // --graph
     if (graph_name == "") {
@@ -124,30 +117,6 @@ int main (int argc, char** argv) {
         cerr << " See " << program_name << " --help for more details" << endl << endl;
         exit(EXIT_FAILURE);
     }
-
-    // --file
-    if (filename == "") {
-        cerr << "\n Please, provide a file with the information of all start states to solve" << endl;
-        cerr << " wrt the identity permutation" << endl;
-        cerr << " See " << program_name << " --help for more details" << endl << endl;
-        exit(EXIT_FAILURE);
-    }
-
-    if (!get_choice (variant, variant_choices)) {
-        cerr << "\n Please, provide a correct name for the variant with --variant" << endl;
-        cerr << " See " << program_name << " --help for more details" << endl << endl;
-        exit(EXIT_FAILURE);
-    }
-
-    // --variant
-    // In case the variant used is the "unit" then no heuristics are used even
-    // if a coordinates file is found
-    if (variant == "unit") {
-        cerr << endl;
-        cerr << " Warning: No heuristics are used in the 'unit' variant of this domain" << endl;
-    }
-
-    /* do the work */
 
     /* !------------------------- INITIALIZATION --------------------------! */
 
@@ -165,50 +134,33 @@ int main (int argc, char** argv) {
         exit (EXIT_FAILURE);
     }
 
+    graph_t graph;
+    graph.load(graph_name, coordinates);
+
     /* !-------------------------------------------------------------------! */
 
     cout << endl;
-    cout << " graph        : " << graph_name << " (" << nbedges << " edges processed)" << endl;
-    cout << " solver       : " << solver_name << " " << git_describe () << endl;
-    cout << " file         : " << filename << " (" << instances.size () << " instances)" << endl;
-    cout << " variant      : " << variant << endl;
-    cout << " K            : ";
-    for (auto& ispec: kspec) {
-        cout << "[" << get<0>(ispec) << ", " << get<1>(ispec) << ", " << get<2> (ispec) << "] ";
-    }
+    cout << "[main] Graph processed" << endl;
+    cout << " graph: " << graph_name << " (" << graph.get_nbvertices() 
+         << " vertices processed)" << endl;
+    cout << " graph: " << graph_name << " (" 
+         << nbedges << " edges processed)" << endl;
     cout << endl;
+     
+    /* !------------------------- ANNEALING PREP --------------------------! */
+    std::vector<state_t> states = generateStates(graph);
 
-    /* !----------------------------- SEARCH ------------------------------! */
+    cout << "[main] Initial states created" << endl;
+    cout << "[main] A total of " << states.size() << " for processing" << endl;
 
+    /* !--------------------------- ANNEALING -----------------------------! */
     // start the clock
     tstart = chrono::system_clock::now ();
 
-    // create an instance of the "generic" domain-dependent solver
-    solver<roadmap_t> manager (get_domain (), variant,
-                               instances, k_params);
-
-    // solve all the instances with each solver selected by the user and in the
-    // same order given
-    for (auto isolver : solvers) {
-
-        // before running the solver make it explicit whether the heuristic
-        // should be computed or not
-        if (brute_force (isolver)) {
-            cout << endl << " ⚠ Ignoring the heuristic function!" << endl;
-            roadmap_t::set_brute_force (true);
-        } else {
-            roadmap_t::set_brute_force (false);
-        }
-        manager.run (isolver, no_doctor, want_summary, want_verbose);
-    }
+    // TODO: ALL THE ANNEALING PROCESS
 
     // and stop the clock
     tend = chrono::system_clock::now ();
-
-    // to conclude, show an error summary and store all the results in a csv
-    // file in case any was given
-    manager.show_error_summary (no_doctor);
-    manager.write_csv (csvname);
     cout << " 🕒 CPU time: " << 1e-9*chrono::duration_cast<chrono::nanoseconds>(tend - tstart).count() << " seconds" << endl;
     cout << endl;
 

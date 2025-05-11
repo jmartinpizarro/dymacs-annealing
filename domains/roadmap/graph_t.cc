@@ -161,7 +161,7 @@ int graph_t::load (const std::string& filename,
             lineno++;
 
         } else {
-
+            std::cout << line << endl;
             // otherwise, a syntax error should be raised immediately
             throw runtime_error (" Syntax error found in the graph file");
         }

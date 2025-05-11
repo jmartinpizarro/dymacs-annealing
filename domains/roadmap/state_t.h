@@ -15,7 +15,6 @@ class state_t {
 
     private:
 
-        graph_t* _original_graph; // pointer to original graph
         size_t _nbedges;
         std::vector<std::vector<edge_t>> _edges;
         std::vector<vertex_t> _vertices; 
@@ -25,7 +24,6 @@ class state_t {
         // default constructors create an empty graph and collection of
         // edges and vertices of the subgraph
         state_t () : 
-            _original_graph {NULL},
             _nbedges {0},
             _edges {std::vector<std::vector<edge_t>>()},
             _vertices {std::vector<vertex_t>()}

@@ -5,7 +5,6 @@
 
 #include "annealing.h"
 #include "utils.h"
-#include "state_t.h"
 
 // Computes the number of h(n) violations. Returns the total number of
 // violations in the subgraph, and fills 'violations[i]' con el # de veces
@@ -106,4 +105,40 @@ int annealing(state_t& state) {
 
     // the graph may still have violations!!
     return 0;
+}
+
+// Given the original graph, returns an array of states populated 
+// with the subgraphs
+std::vector<state_t> generateStates(const graph_t& g) {
+    std::vector<state_t> states;
+    state_t state;
+    size_t edgeCount = 0;
+    const size_t V = g.get_nbvertices();
+
+    // for each node
+    for (size_t u = 0; u < V; ++u) {
+
+        // get edges
+        const auto& adj = g.get_edges(u);
+        for (const auto& e : adj) {
+            
+            state.add_vertex(u);
+            state.add_edge(u, e.get_to(), e.get_weight());
+
+            ++edgeCount;
+
+            // if batch completed, add and reset
+            if (edgeCount % BATCHES == 0) {
+                states.push_back(state);
+                state = state_t();
+            }
+        }
+    }
+
+    // if state size < BATCH size, push
+    if (state.get_nbedges() > 0) {
+        states.push_back(state);
+    }
+
+    return states;
 }
