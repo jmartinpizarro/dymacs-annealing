@@ -66,8 +66,29 @@ void state_t::add_edge (size_t from, size_t to, int weight) {
     _nbedges++;
 }
 
-void state_t::modify_vertex(int& id, double longitude, double latitude) {
-    _vertices[id] = vertex_t(longitude, latitude);
+void state_t::modify_vertex(int& node_id, double longitude, double latitude) {
+
+    // first, ensure the vertex can be allocated both in the container of
+    // vertices and the adjacency matrix. If not, return false right away
+    if (node_id > _vertices.max_size () || node_id > _edges.max_size()) {
+        return;
+    }
+
+    // otherwise, ensure there is space enough to store the new vertex both in
+    // the container of vertices and also the adjacency matrix.
+    if (node_id >= _vertices.size ()) {
+        _vertices.resize (1+node_id);
+    }
+
+    // When resizing the adjacency matrix, make sure that the vector stored at
+    // this location has space enough to store all neighbours. The reason why we
+    // proceed this way is because instead of populating the vector pushing
+    // back, we need random access to positions which are available in memory
+    if (node_id >= _edges.size ()) {
+        _edges.resize (1+node_id, vector<edge_t>());
+    }
+
+    _vertices[node_id] = vertex_t(longitude, latitude);
 }
 
 // Mutate: randomly displace one vertex, returns <node_id, old_vertex>

@@ -1,9 +1,12 @@
 #include <cmath>
+#include <cstddef>
 #include <random>
 #include <chrono>
 #include <map>
 
 #include "annealing.h"
+#include "graph_t.h"
+#include "state_t.h"
 #include "utils.h"
 
 // Computes the number of h(n) violations. Returns the total number of
@@ -95,9 +98,13 @@ int annealing(state_t& state) {
                           old_v.get_longitude(),
                           old_v.get_latitude());
         }
-
+        std::cout << std::endl;
+        std::cout << "[annealing] Iteration Data" << std::endl;
+        std::cout << "Node was processed" << std::endl;
         // cool this shit, is burning!
         T *= COOLING_RATE;
+
+        std::cout << "Temperature is " << T << std::endl;
 
         // no violations, HALT
         if (old_cost == 0) break;
@@ -112,31 +119,49 @@ int annealing(state_t& state) {
 std::vector<state_t> generateStates(const graph_t& g) {
     std::vector<state_t> states;
     state_t state;
-    size_t edgeCount = 0;
+    int c = 0;
     const size_t V = g.get_nbvertices();
 
     // for each node
     for (size_t u = 0; u < V; ++u) {
 
-        // get edges
-        const auto& adj = g.get_edges(u);
-        for (const auto& e : adj) {
-            
-            state.add_vertex(u);
-            state.add_edge(u, e.get_to(), e.get_weight());
+        // obtain the edges and weights from the original graph
+        // and add them to the new subgraph
+        std::vector<edge_t> edgesToAppend = g.get_edges(u);
+        vertex_t vertexToAppend = g.get_vertex(u);
+        
+        // add the vertex into the _vertices array
+        state.modify_vertex(c, 
+                            vertexToAppend.get_longitude(), 
+                            vertexToAppend.get_latitude());
 
-            ++edgeCount;
+        std::cout << "[generateStates] Vertex added " << c << " with a total of vertex in the state: " << state.get_nbvertices() << std::endl;
 
-            // if batch completed, add and reset
-            if (edgeCount % BATCHES == 0) {
-                states.push_back(state);
-                state = state_t();
-            }
+        // add edges
+        for (const auto& e : edgesToAppend){
+            std::cout << u << " -> " << e.get_to() << " with weight of: " << e.get_weight() << std::endl;
+            //state.add_edge(u, e.get_to(), e.get_weight());
         }
+
+        if (state.get_nbvertices() >= BATCHES) { // max BATCH surpassed, add and reset
+            std::cout << "current size of the graph: " << state.get_nbvertices() << std::endl;
+            states.push_back(state);
+
+            // check if there are edges to nodes that
+            // are not included in the graph. Remove them.
+
+            state = state_t();
+            c = 0;
+        }
+
+        c++;
+        
+        std::cout << state.get_nbvertices() << std::endl;
+        std::cout << "-------" << std::endl;
     }
 
     // if state size < BATCH size, push
-    if (state.get_nbedges() > 0) {
+    if (state.get_nbvertices() > 0) {
         states.push_back(state);
     }
 

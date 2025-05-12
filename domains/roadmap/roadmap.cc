@@ -146,7 +146,7 @@ int main (int argc, char** argv) {
     cout << " graph: " << graph_name << " (" 
          << nbedges << " edges processed)" << endl;
     cout << endl;
-     
+
     /* !------------------------- ANNEALING PREP --------------------------! */
     std::vector<state_t> states = generateStates(graph);
 
@@ -158,6 +158,10 @@ int main (int argc, char** argv) {
     tstart = chrono::system_clock::now ();
 
     // TODO: ALL THE ANNEALING PROCESS
+    // for the moment, just anneal one subgraph
+    state_t first = states[0];
+    cout << first.get_nbvertices() << " " << first.get_nbedges() << endl;
+    annealing(first);
 
     // and stop the clock
     tend = chrono::system_clock::now ();

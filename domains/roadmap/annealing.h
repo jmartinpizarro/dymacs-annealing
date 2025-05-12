@@ -25,7 +25,7 @@ double acceptance_criteria(int new_cost, int old_cost, double t_current);
 // Uses simulated annealing techniques for fixing a dymacs graph.Returns 0 if 
 // everything went correctly, -1 otherwise. It creates a new directory with the
 // new files for graph processing (again following the dymacs version)
-int annealing(graph_t* g);
+int annealing(state_t& state);
 
 // Given the original graph, returns an array of states populated 
 // with the subgraphs
