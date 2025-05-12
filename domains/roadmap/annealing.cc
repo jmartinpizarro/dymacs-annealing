@@ -3,6 +3,7 @@
 #include <random>
 #include <chrono>
 #include <map>
+#include <unordered_map>
 
 #include "annealing.h"
 #include "graph_t.h"
@@ -122,6 +123,11 @@ std::vector<state_t> generateStates(const graph_t& g) {
     int c = 0;
     const size_t V = g.get_nbvertices();
 
+    // the easiest way to save the data in order to modify the edges id is
+    // to create a translator table that saves the original key, from the graph,
+    // and the local key, from the subgraph
+    std::unordered_map<size_t, size_t> mapId;
+
     // for each node
     for (size_t u = 0; u < V; ++u) {
 
@@ -134,13 +140,21 @@ std::vector<state_t> generateStates(const graph_t& g) {
         state.modify_vertex(c, 
                             vertexToAppend.get_longitude(), 
                             vertexToAppend.get_latitude());
-
+        
+        mapId[u] = c; 
         std::cout << "[generateStates] Vertex added " << c << " with a total of vertex in the state: " << state.get_nbvertices() << std::endl;
 
         // add edges
-        for (const auto& e : edgesToAppend){
-            std::cout << u << " -> " << e.get_to() << " with weight of: " << e.get_weight() << std::endl;
-            //state.add_edge(u, e.get_to(), e.get_weight());
+        for (const auto& e : g.get_edges(u)) {
+            size_t orig_to = e.get_to();
+            auto it = mapId.find(orig_to);
+
+            // add if local_to is in the translator table (in the subgraph)
+            if (it != mapId.end()) {
+                size_t local_to = it->second;
+                state.add_edge(c, local_to, e.get_weight());
+                std::cout << c << " -> " << local_to << " --- w: " << e.get_weight() << std::endl;
+            }
         }
 
         if (state.get_nbvertices() >= BATCHES) { // max BATCH surpassed, add and reset

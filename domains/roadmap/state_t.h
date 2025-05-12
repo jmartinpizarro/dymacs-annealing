@@ -58,6 +58,8 @@ class state_t {
         // or not
         double evaluate(std::map<int,int>* violations);
 
+        void print_data();
+
 }; // class state_t
 
 #endif // STATE_T

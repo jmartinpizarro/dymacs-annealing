@@ -163,6 +163,8 @@ int main (int argc, char** argv) {
     cout << first.get_nbvertices() << " " << first.get_nbedges() << endl;
     annealing(first);
 
+    first.print_data();
+
     // and stop the clock
     tend = chrono::system_clock::now ();
     cout << " 🕒 CPU time: " << 1e-9*chrono::duration_cast<chrono::nanoseconds>(tend - tstart).count() << " seconds" << endl;

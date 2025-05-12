@@ -144,3 +144,29 @@ double state_t::evaluate(std::map<int,int>* violations) {
     return static_cast<double>(cost);
 }
 
+void state_t::print_data() {
+    std::cout << "\n[state_t] Printing data from the state...\n\n";
+
+    // 1) Vértices
+    std::cout << "Vertices (" << get_nbvertices() << "):\n";
+    for (size_t i = 0; i < _vertices.size(); ++i) {
+        const auto& v = _vertices[i];
+        std::cout 
+            << "  [" << i << "] "
+            << "(lon=" << v.get_longitude() 
+            << ", lat=" << v.get_latitude() << ")\n";
+    }
+
+    // 2) Aristas
+    std::cout << "\nEdges (" << get_nbedges() << "):\n";
+    for (size_t from = 0; from < _edges.size(); ++from) {
+        for (const auto& e : _edges[from]) {
+            std::cout 
+                << "  " << from 
+                << " -> " << e.get_to() 
+                << "  [weight=" << e.get_weight() << "]\n";
+        }
+    }
+
+    std::cout << std::endl;
+}
