@@ -31,7 +31,7 @@ int objective_function(const graph_t* g, std::map<int,int>* violations) {
             double h = great_circle_distance(vn, meta_v);
             double g_real = dist[n];
             if (h > g_real + EPS) {
-                std::cout << "[objective_function] A violation has been found in the node" << n << std::endl;
+                std::cout << "[objective_function] A violation has been found in the node " << n << std::endl;
                 ++(*violations)[static_cast<int>(n)];
                 ++total_violations;
             }
@@ -59,6 +59,8 @@ int annealing(state_t& state) {
     // obtain violations of the graph
     std::map<int,int> violations;
     double old_cost = state.evaluate(&violations);
+    std::cout <<"[annealing] Number of violations in current iteration" << 
+                violations.size() << std::endl;
 
     // temperature can be either 1 or the old_cost in order to not iterate
     // tons of time due to a very high temperature and low violations
@@ -99,9 +101,7 @@ int annealing(state_t& state) {
                           old_v.get_longitude(),
                           old_v.get_latitude());
         }
-        std::cout << std::endl;
-        std::cout << "[annealing] Iteration Data" << std::endl;
-        std::cout << "Node was processed" << std::endl;
+
         // cool this shit, is burning!
         T *= COOLING_RATE;
 
@@ -123,11 +123,6 @@ std::vector<state_t> generateStates(const graph_t& g) {
     int c = 0;
     const size_t V = g.get_nbvertices();
 
-    // the easiest way to save the data in order to modify the edges id is
-    // to create a translator table that saves the original key, from the graph,
-    // and the local key, from the subgraph
-    std::unordered_map<size_t, size_t> mapId;
-
     // for each node
     for (size_t u = 0; u < V; ++u) {
 
@@ -141,16 +136,18 @@ std::vector<state_t> generateStates(const graph_t& g) {
                             vertexToAppend.get_longitude(), 
                             vertexToAppend.get_latitude());
         
-        mapId[u] = c; 
+        // adds the data to the translation table
+        state.add_translation(u, c);
+
         std::cout << "[generateStates] Vertex added " << c << " with a total of vertex in the state: " << state.get_nbvertices() << std::endl;
 
         // add edges
         for (const auto& e : g.get_edges(u)) {
             size_t orig_to = e.get_to();
-            auto it = mapId.find(orig_to);
+            auto it = state._mapId.find(orig_to);
 
             // add if local_to is in the translator table (in the subgraph)
-            if (it != mapId.end()) {
+            if (it != state._mapId.end()) {
                 size_t local_to = it->second;
                 state.add_edge(c, local_to, e.get_weight());
                 std::cout << c << " -> " << local_to << " --- w: " << e.get_weight() << std::endl;
@@ -158,7 +155,6 @@ std::vector<state_t> generateStates(const graph_t& g) {
         }
 
         if (state.get_nbvertices() >= BATCHES) { // max BATCH surpassed, add and reset
-            std::cout << "current size of the graph: " << state.get_nbvertices() << std::endl;
             states.push_back(state);
 
             // check if there are edges to nodes that

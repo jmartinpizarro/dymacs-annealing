@@ -3,9 +3,18 @@
 #ifndef STATE_T
 #define STATE_T
 
+#include <cstddef>
 #include <vector>
+#include <unordered_map>
+#include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <cmath>
+#include <string>
 
 #include "graph_t.h"
+
+static constexpr double PI = 3.14159265358979323846;
 
 class state_t {
 
@@ -17,9 +26,16 @@ class state_t {
 
         size_t _nbedges;
         std::vector<std::vector<edge_t>> _edges;
-        std::vector<vertex_t> _vertices; 
+        std::vector<vertex_t> _vertices;
+        // the easiest way to save the data in order to modify the edges id is
+        // to create a translator table that saves the original key, from 
+        // the graph, and the local key, from the subgraph
 
     public:
+        
+        // this should be private? idk, i just don't want to create more
+        // methods
+        std::unordered_map<size_t, size_t> _mapId;
 
         // default constructors create an empty graph and collection of
         // edges and vertices of the subgraph
@@ -51,14 +67,15 @@ class state_t {
         // correctly modified, false otherwise
         void modify_vertex (int& node_id, double longitude, double latitude);
 
+        // adds the <global, local> ids of a node into the translator map
+        void add_translation (size_t global, size_t local);
+
         // randomly displace one vertex, returns <node_id, old_vertex>
         std::pair<size_t,vertex_t> mutate();
 
         // evaluates an state in order to detect if mutation has been useful
         // or not
         double evaluate(std::map<int,int>* violations);
-
-        void print_data();
 
 }; // class state_t
 

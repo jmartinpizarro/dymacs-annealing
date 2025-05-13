@@ -16,14 +16,19 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <map>
 #include <regex>
-#include <sstream>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
+
+#include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <vector>
+#include <unordered_map>
+#include <tuple>
+#include <cmath>
 
 #include <getopt.h>
 
@@ -35,8 +40,6 @@
 
 #define EXIT_OK 0
 #define EXIT_FAILURE 1
-
-constexpr double PI = 3.141592653589793238462643383279502884197;
 
 using namespace std;
 
@@ -63,6 +66,7 @@ static struct option const long_options[] =
     {NULL, 0, NULL, 0}
 };
 
+void generate_merged_dataset(std::vector<state_t>& states);
 const string get_domain ();
 const string get_variant ();
 bool brute_force (const string& solver_name);
@@ -157,17 +161,20 @@ int main (int argc, char** argv) {
     // start the clock
     tstart = chrono::system_clock::now ();
 
-    // TODO: ALL THE ANNEALING PROCESS
-    // for the moment, just anneal one subgraph
-    state_t first = states[0];
-    cout << first.get_nbvertices() << " " << first.get_nbedges() << endl;
-    annealing(first);
+    for (auto& state : states){
+        annealing(state);
+    }
+    
+    cout << "finished annealing" << endl;
 
-    first.print_data();
+    generate_merged_dataset(states);
+
 
     // and stop the clock
     tend = chrono::system_clock::now ();
-    cout << " 🕒 CPU time: " << 1e-9*chrono::duration_cast<chrono::nanoseconds>(tend - tstart).count() << " seconds" << endl;
+    cout << " 🕒 CPU time: " <<
+            1e-9*chrono::duration_cast<chrono::nanoseconds>(tend - tstart).count() 
+            << " seconds" << endl;
     cout << endl;
 
     /* !-------------------------------------------------------------------! */

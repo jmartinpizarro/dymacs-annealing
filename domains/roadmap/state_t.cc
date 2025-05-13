@@ -91,6 +91,13 @@ void state_t::modify_vertex(int& node_id, double longitude, double latitude) {
     _vertices[node_id] = vertex_t(longitude, latitude);
 }
 
+// adds the <global, local> ids of a node into the translator map
+void state_t::add_translation (size_t global, size_t local){
+
+    _mapId[global] = local;
+    return;
+}
+
 // Mutate: randomly displace one vertex, returns <node_id, old_vertex>
 std::pair<size_t,vertex_t> state_t::mutate() {
 
@@ -142,31 +149,4 @@ double state_t::evaluate(std::map<int,int>* violations) {
     violations->clear();
     int cost = objective_function(&temp, violations);
     return static_cast<double>(cost);
-}
-
-void state_t::print_data() {
-    std::cout << "\n[state_t] Printing data from the state...\n\n";
-
-    // 1) Vértices
-    std::cout << "Vertices (" << get_nbvertices() << "):\n";
-    for (size_t i = 0; i < _vertices.size(); ++i) {
-        const auto& v = _vertices[i];
-        std::cout 
-            << "  [" << i << "] "
-            << "(lon=" << v.get_longitude() 
-            << ", lat=" << v.get_latitude() << ")\n";
-    }
-
-    // 2) Aristas
-    std::cout << "\nEdges (" << get_nbedges() << "):\n";
-    for (size_t from = 0; from < _edges.size(); ++from) {
-        for (const auto& e : _edges[from]) {
-            std::cout 
-                << "  " << from 
-                << " -> " << e.get_to() 
-                << "  [weight=" << e.get_weight() << "]\n";
-        }
-    }
-
-    std::cout << std::endl;
 }
