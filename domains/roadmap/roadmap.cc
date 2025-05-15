@@ -164,7 +164,6 @@ int main (int argc, char** argv) {
     for (auto& state : states){
         annealing(state);
     }
-    
     cout << "finished annealing" << endl;
 
     generate_merged_dataset(states);
@@ -181,6 +180,90 @@ int main (int argc, char** argv) {
 
     // Well done! Keep up the good job!
     return (EXIT_OK);
+}
+
+void generate_merged_dataset(std::vector<state_t>& states) {
+    namespace fs = std::filesystem;
+    const std::string dir = "domains/roadmap/benchmark";
+
+    // 0) Imprime cwd y ruta absoluta de benchmark
+    std::cout << "[debug] Current working directory: "
+              << fs::current_path() << "\n";
+    std::cout << "[debug] Will create/use directory: "
+              << fs::absolute(dir) << "\n";
+
+    // 1) Crear carpetas con comprobación de errores
+    std::error_code ec;
+    if (!fs::create_directories(dir, ec) && ec) {
+        std::cerr << "[error] create_directories failed: "
+                  << ec.message() << "\n";
+        return;
+    }
+    std::cout << "[debug] Directory ensured: " << fs::absolute(dir) << "\n";
+
+    // Mapas y listas como antes...
+    std::unordered_map<size_t, std::pair<long,long>> coordMap;
+    std::vector<std::tuple<size_t,size_t,long>> edgeList;
+
+    // 1) Recorre todos los estados y recoge vértices y aristas
+    for (const auto& st : states) {
+        std::cout << "[debug] Processing state with "
+                  << st.get_nbvertices() << " vertices and "
+                  << st.get_nbedges() << " total edges\n";
+
+        // 1a) Invierte st._mapId: local → orig
+        std::vector<size_t> local2orig(st.get_nbvertices());
+        for (const auto& [orig, loc] : st._mapId) {
+            if (loc < local2orig.size())
+                local2orig[loc] = orig;
+        }
+
+        // 1b) Procesa vértices del estado
+        for (size_t loc = 0; loc < st.get_nbvertices(); ++loc) {
+            size_t orig = local2orig[loc];
+            // Si no lo hemos visto antes, lo añadimos
+            if (coordMap.find(orig) == coordMap.end()) {
+                const auto& v = st.get_vertex(loc);
+                // rad → deg
+                double deg_lon = v.get_longitude() * 180.0 / PI;
+                double deg_lat = v.get_latitude()  * 180.0 / PI;
+                // microgrados
+                long ilon = static_cast<long>(std::round(deg_lon * 1e6));
+                long ilat = static_cast<long>(std::round(deg_lat * 1e6));
+                coordMap.emplace(orig, std::make_pair(ilon, ilat));
+            }
+        }
+
+        // 1c) Procesa aristas del estado
+        for (size_t loc_u = 0; loc_u < st.get_nbvertices(); ++loc_u) {
+            size_t orig_u = local2orig[loc_u];
+            for (const auto& e : st.get_edges(loc_u)) {
+                size_t loc_v = e.get_to();
+                size_t orig_v = local2orig[loc_v];
+                long w = static_cast<long>(std::round(e.get_weight()));
+                edgeList.emplace_back(orig_u, orig_v, w);
+            }
+        }
+    }
+
+    // Totales
+    const size_t N = coordMap.size();
+
+    // 2) Volcar .co
+    const auto co_path = fs::absolute(dir + "/USA-road-d.NY.fix.co");
+    std::ofstream co(co_path);
+    if (!co.is_open()) {
+        std::cerr << "[error] No se pudo abrir para escritura: "
+                  << co_path << "\n";
+        return;
+    }
+    std::cout << "[debug] Opened for writing: " << co_path << "\n";
+    co << "c USA-road-d.NY merged node coordinates\n"
+       << "p aux sp_co " << N << "\n";
+    for (const auto& [orig, xy] : coordMap) {
+        co << "v " << orig << " " << xy.first << " " << xy.second << "\n";
+    }
+    co.close();
 }
 
 // return the domain of this solver
