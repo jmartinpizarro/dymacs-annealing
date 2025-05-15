@@ -16,7 +16,7 @@ constexpr double COORDINATES_MAX_VARIATION = 0.05; // bound variation of coord
 
 // Computes the number of h(n) violations. Returns the total number of 
 // violations in the subgraph and the violations that each node has.
-int objective_function(const graph_t* g, std::map<int, int>* violations);
+double objective_function(const graph_t* g, std::map<int, int>* violations);
 
 // Returns the probability of accepting a mutated state as the next state, if 
 // the recently mutated state is not good enough for being accepted inmediatly
