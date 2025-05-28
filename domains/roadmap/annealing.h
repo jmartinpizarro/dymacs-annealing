@@ -9,10 +9,10 @@
 #include "graph_t.h"
 #include "state_t.h"
 
-constexpr int BATCHES = 200; // maximum size of any subgraph
+constexpr int BATCHES = 10000; // maximum size of any subgraph
 constexpr int MAX_ITERS = 10000; // if no improvements after, HALT
 constexpr double COOLING_RATE = 0.95;
-constexpr double COORDINATES_MAX_VARIATION = 0.05; // bound variation of coord
+constexpr double COORDINATES_MAX_VARIATION = 0.1; // bound variation of coord
 
 // Computes the number of h(n) violations. Returns the total number of 
 // violations in the subgraph and the violations that each node has.

@@ -261,6 +261,9 @@ void generate_merged_dataset(std::vector<state_t>& states) {
     co << "c USA-road-d.NY merged node coordinates\n"
        << "p aux sp_co " << N << "\n";
     for (const auto& [orig, xy] : coordMap) {
+        if (xy.first == 0 || xy.second == 0){
+            cout << "error with coordinates in node " << orig << endl << xy.first << "-" << xy.second << endl;
+        }
         co << "v " << orig << " " << xy.first << " " << xy.second << "\n";
     }
     co.close();
