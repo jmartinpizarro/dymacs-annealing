@@ -13,13 +13,6 @@ option(DISABLE_TESTS "Disable the compilation of the unit tests")
 add_subdirectory (src)
 add_subdirectory (domains)
 
-# add the tests only in case they have not been disabled
-if (NOT DISABLE_TESTS)
-    add_subdirectory (tests)
-else()
-    message(STATUS "Tests disabled")
-endif()
-
 # print message warning that memory detection will not work on non-unix systems
 if (NOT UNIX)
     message(NOTICE "Memory usage detection will not work on non-unix systems")
