@@ -15,6 +15,7 @@
 
 #include <cstdlib>
 #include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 #include <cstddef>
@@ -153,7 +154,11 @@ public:
     std::pair<size_t,vertex_t> mutate();
     // evaluates an state in order to detect if mutation has been useful
     // or not
-    double evaluate(std::map<int,int>* violations);
+    double evaluate(const std::pair<size_t, vertex_t> &change,
+                    std::unordered_map<int,int> *violations);
+
+    // saves the graph data in a file following DYMACS format
+    int save();
 
 }; // class graph_t
 

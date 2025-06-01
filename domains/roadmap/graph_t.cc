@@ -14,7 +14,7 @@
 #include <utility>
 #include <random>
 #include <stdexcept>
-#include<regex>
+#include <regex>
 #include <iostream>
 #include <fstream>
 
@@ -208,29 +208,51 @@ std::pair<size_t,vertex_t> graph_t::mutate() {
 
 // evaluates an state in order to detect if mutation has been useful
 // or not
-double graph_t::evaluate(std::map<int,int>* violations) {
-    // reconstruct the graph class
-    graph_t temp;
-    size_t N = _vertices.size();
-    for (int i = 0; i < N; ++i) {
+double graph_t::evaluate(
+    const std::pair<size_t, vertex_t> &change,
+    std::unordered_map<int,int> *violations) {
 
-        temp.add_vertex(i);
-        temp.modify_vertex(i,
-            _vertices[i].get_longitude(),
-            _vertices[i].get_latitude()
-        );
+    return objective_function(
+        this,
+        change.first,
+        change.second,
+        violations
+    );
+}
+
+// saves the graph data in a file following DYMACS format
+int graph_t::save(){
+
+    // file name
+    const std::string filename = "domains/roadmap/benchmark/USA-road-d.NY.fix.co";
+    std::ofstream out{ filename };
+    if (!out.is_open()) {
+        return -1;
     }
 
-    for (size_t u = 0; u < N; ++u) {
+    // n vertex
+    size_t N = get_nbvertices();
 
-        for (auto const& e : _edges[u]) {
-            temp.add_edge(u, e.get_to(), e.get_weight());
-        }
+    out << "c Graph coordinates saved by graph_t::save()\n";
+    out << "p aux sp_co " << N << "\n";
+
+    // for each vertex
+    for (size_t idx = 0; idx < N; ++idx) {
+        vertex_t v = get_vertex(idx);
+
+        // radians -> degrees
+        double deg_lon = v.get_longitude() * 180.0 / M_PI;
+        double deg_lat = v.get_latitude()  * 180.0 / M_PI;
+
+        // microgrades
+        long ilon = static_cast<long>(std::lround(deg_lon * 1e6));
+        long ilat = static_cast<long>(std::lround(deg_lat * 1e6));
+
+        out << "v " << idx << " " << ilon << " " << ilat << "\n";
     }
 
-    violations->clear();
-    int cost = objective_function(&temp, violations);
-    return static_cast<double>(cost);
+    out.close();
+    return 0;
 }
 
 

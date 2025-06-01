@@ -156,17 +156,14 @@ int main (int argc, char** argv) {
     cout << "finished annealing" << endl;
     // we should print the total number of violations removed and left
 
-    // TODO: logic of dataset changes
-    generate_merged_dataset(graph);
-
-
     // and stop the clock
     tend = chrono::system_clock::now ();
     cout << " 🕒 CPU time: " <<
             1e-9*chrono::duration_cast<chrono::nanoseconds>(tend - tstart).count() 
             << " seconds" << endl;
     cout << endl;
-
+    
+    graph.save();
     /* !-------------------------------------------------------------------! */
 
     // Well done! Keep up the good job!
