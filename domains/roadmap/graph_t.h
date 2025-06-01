@@ -13,14 +13,11 @@
 #ifndef _GRAPH_T_H_
 #define _GRAPH_T_H_
 
-#include <algorithm>
 #include <cstdlib>
-#include <fstream>
-#include <iostream>
 #include <map>
-#include <regex>
 #include <string>
 #include <vector>
+#include <cstddef>
 
 constexpr int EARTH_RADIUS = 6'350'000;
 
@@ -151,6 +148,12 @@ public:
     // given in radians. It returns the number of edges processed
     int load (const std::string& filename,
               const std::map<int, std::pair<double, double>>& coordinates);
+
+    // randomly displace one vertex, returns <node_id, old_vertex>
+    std::pair<size_t,vertex_t> mutate();
+    // evaluates an state in order to detect if mutation has been useful
+    // or not
+    double evaluate(std::map<int,int>* violations);
 
 }; // class graph_t
 

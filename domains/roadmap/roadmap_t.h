@@ -13,12 +13,13 @@
 #ifndef _ROADMAP_T_H_
 #define _ROADMAP_T_H_
 
-#include <cmath>
 #include <cstdlib>
 #include <map>
 #include <string>
 #include <tuple>
 #include <vector>
+#include <stdexcept>
+#include <iostream>
 
 #include "graph_t.h"
 

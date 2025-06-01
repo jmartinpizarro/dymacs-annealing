@@ -14,6 +14,8 @@
 
 using namespace std;
 
+#include <cmath>
+
 // Static vars
 graph_t roadmap_t::_graph;
 bool roadmap_t::_brute_force = false;

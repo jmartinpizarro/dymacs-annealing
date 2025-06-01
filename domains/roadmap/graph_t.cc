@@ -11,8 +11,17 @@
 //
 
 #include <cmath>
+#include <utility>
+#include <random>
+#include <stdexcept>
+#include<regex>
+#include <iostream>
+#include <fstream>
 
 #include "graph_t.h"
+#include "utils.h"
+#include "parameters.h"
+#include "annealing.h"
 
 using namespace std;
 
@@ -170,6 +179,60 @@ int graph_t::load (const std::string& filename,
     // return the number of edges processed, i.e., the number of lines parsed
     return lineno;
 }
+
+// Mutate: randomly displace one vertex, returns <node_id, old_vertex>
+std::pair<size_t,vertex_t> graph_t::mutate() {
+
+    // RNG static to preserve seed across calls
+    static std::mt19937_64 rng(std::random_device{}());
+    std::uniform_int_distribution<size_t> uniNode(0, _vertices.size()-1);
+    std::uniform_real_distribution<double> uniVar(
+        -COORDINATES_MAX_VARIATION,
+        COORDINATES_MAX_VARIATION
+    );
+
+    size_t node_id = uniNode(rng);
+    vertex_t old_v = _vertices[node_id];
+
+    // Apply small random offset
+    double dlon = uniVar(rng);
+    double dlat = uniVar(rng);
+
+    _vertices[node_id] = vertex_t(
+        old_v.get_longitude() + dlon,
+        old_v.get_latitude()  + dlat
+    );
+
+    return {node_id, old_v};
+}
+
+// evaluates an state in order to detect if mutation has been useful
+// or not
+double graph_t::evaluate(std::map<int,int>* violations) {
+    // reconstruct the graph class
+    graph_t temp;
+    size_t N = _vertices.size();
+    for (int i = 0; i < N; ++i) {
+
+        temp.add_vertex(i);
+        temp.modify_vertex(i,
+            _vertices[i].get_longitude(),
+            _vertices[i].get_latitude()
+        );
+    }
+
+    for (size_t u = 0; u < N; ++u) {
+
+        for (auto const& e : _edges[u]) {
+            temp.add_edge(u, e.get_to(), e.get_weight());
+        }
+    }
+
+    violations->clear();
+    int cost = objective_function(&temp, violations);
+    return static_cast<double>(cost);
+}
+
 
 
 // Local Variables:
