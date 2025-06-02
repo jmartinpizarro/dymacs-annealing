@@ -151,7 +151,7 @@ public:
               const std::map<int, std::pair<double, double>>& coordinates);
 
     // randomly displace one vertex, returns <node_id, old_vertex>
-    std::pair<size_t,vertex_t> mutate();
+    std::pair<size_t,vertex_t> mutate(int node_id);
     // evaluates an state in order to detect if mutation has been useful
     // or not
     double evaluate(const std::pair<size_t, vertex_t> &change,

@@ -101,10 +101,24 @@ int annealing(graph_t &graph) {
   // init temp, in case there are low violations and tons of nodes
   double T = std::max(1, static_cast<int>(old_cost));
 
+  std::mt19937_64 rng(
+      std::chrono::steady_clock::now().time_since_epoch().count());
+
   // main SA
   for (int iter = 0; iter < MAX_ITERS && T > 1e-6; ++iter) {
+
+    int max_key = -1; // node_id
+    int max_value = std::numeric_limits<int>::min();
+
+    for (const auto &pair : violations) {
+      if (pair.second > max_value) {
+        max_value = pair.second;
+        max_key = pair.first;
+      }
+    }
+
     // mutate
-    auto change = graph.mutate();
+    auto change = graph.mutate(max_key);
     int node_id = change.first;
     vertex_t old_v = change.second;
 
@@ -112,8 +126,6 @@ int annealing(graph_t &graph) {
     double new_cost = graph.evaluate(change, &violations);
 
     // decide if the modification is accepted or not
-    std::mt19937_64 rng(
-        std::chrono::steady_clock::now().time_since_epoch().count());
     std::uniform_real_distribution<double> uni01(0.0, 1.0);
 
     if (new_cost < old_cost ||

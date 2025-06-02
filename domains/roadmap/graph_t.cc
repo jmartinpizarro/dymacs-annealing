@@ -180,18 +180,16 @@ int graph_t::load (const std::string& filename,
     return lineno;
 }
 
-// Mutate: randomly displace one vertex, returns <node_id, old_vertex>
-std::pair<size_t,vertex_t> graph_t::mutate() {
+// Mutate: displaces a selected vertex, returns <node_id, old_vertex>
+std::pair<size_t,vertex_t> graph_t::mutate(int node_id) {
 
     // RNG static to preserve seed across calls
     static std::mt19937_64 rng(std::random_device{}());
-    std::uniform_int_distribution<size_t> uniNode(0, _vertices.size()-1);
     std::uniform_real_distribution<double> uniVar(
         -COORDINATES_MAX_VARIATION,
         COORDINATES_MAX_VARIATION
     );
 
-    size_t node_id = uniNode(rng);
     vertex_t old_v = _vertices[node_id];
 
     // Apply small random offset
