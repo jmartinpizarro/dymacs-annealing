@@ -181,20 +181,15 @@ int graph_t::load (const std::string& filename,
 }
 
 // Mutate: randomly displace one vertex, returns <node_id, old_vertex>
-std::pair<size_t,vertex_t> graph_t::mutate() {
-
-    // RNG static to preserve seed across calls
+std::pair<size_t, vertex_t> graph_t::mutate(int node_id) {
     static std::mt19937_64 rng(std::random_device{}());
-    std::uniform_int_distribution<size_t> uniNode(0, _vertices.size()-1);
     std::uniform_real_distribution<double> uniVar(
         -COORDINATES_MAX_VARIATION,
         COORDINATES_MAX_VARIATION
     );
 
-    size_t node_id = uniNode(rng);
     vertex_t old_v = _vertices[node_id];
 
-    // Apply small random offset
     double dlon = uniVar(rng);
     double dlat = uniVar(rng);
 
@@ -233,6 +228,19 @@ double graph_t::evaluate(std::map<int,int>* violations) {
     return static_cast<double>(cost);
 }
 
+void graph_t::set_vertices(const std::vector<vertex_t>& new_vertices) {
+    if (new_vertices.size() != _vertices.size()) {
+        std::cerr << "[set_vertices] Error: número de vértices no coincide. "
+                  << "Esperado: " << _vertices.size()
+                  << ", recibido: " << new_vertices.size() << std::endl;
+        return;
+    }
+
+    for (size_t i = 0; i < new_vertices.size(); ++i) {
+        int id = static_cast<int>(i);
+        modify_vertex(id, new_vertices[i].get_longitude(), new_vertices[i].get_latitude());
+    }
+}
 
 
 // Local Variables:

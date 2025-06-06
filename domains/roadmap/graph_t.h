@@ -150,10 +150,12 @@ public:
               const std::map<int, std::pair<double, double>>& coordinates);
 
     // randomly displace one vertex, returns <node_id, old_vertex>
-    std::pair<size_t,vertex_t> mutate();
+    std::pair<size_t,vertex_t> mutate(int node_id);
     // evaluates an state in order to detect if mutation has been useful
     // or not
     double evaluate(std::map<int,int>* violations);
+
+    void set_vertices(const std::vector<vertex_t> &new_vertices);
 
 }; // class graph_t
 
