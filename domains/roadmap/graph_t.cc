@@ -180,10 +180,8 @@ int graph_t::load (const std::string& filename,
     return lineno;
 }
 
-// Mutate: displaces a selected vertex, returns <node_id, old_vertex>
-std::pair<size_t,vertex_t> graph_t::mutate(int node_id) {
-
-    // RNG static to preserve seed across calls
+// Mutate: randomly displace one vertex, returns <node_id, old_vertex>
+std::pair<size_t, vertex_t> graph_t::mutate(int node_id) {
     static std::mt19937_64 rng(std::random_device{}());
     std::uniform_real_distribution<double> uniVar(
         -COORDINATES_MAX_VARIATION,
@@ -192,7 +190,6 @@ std::pair<size_t,vertex_t> graph_t::mutate(int node_id) {
 
     vertex_t old_v = _vertices[node_id];
 
-    // Apply small random offset
     double dlon = uniVar(rng);
     double dlat = uniVar(rng);
 
@@ -206,16 +203,29 @@ std::pair<size_t,vertex_t> graph_t::mutate(int node_id) {
 
 // evaluates an state in order to detect if mutation has been useful
 // or not
-double graph_t::evaluate(
-    const std::pair<size_t, vertex_t> &change,
-    std::unordered_map<int,int> *violations) {
+double graph_t::evaluate(std::unordered_map<int,int>* violations) {
+    // reconstruct the graph class
+    graph_t temp;
+    size_t N = _vertices.size();
+    for (int i = 0; i < N; ++i) {
 
-    return objective_function(
-        this,
-        change.first,
-        change.second,
-        violations
-    );
+        temp.add_vertex(i);
+        temp.modify_vertex(i,
+            _vertices[i].get_longitude(),
+            _vertices[i].get_latitude()
+        );
+    }
+
+    for (size_t u = 0; u < N; ++u) {
+
+        for (auto const& e : _edges[u]) {
+            temp.add_edge(u, e.get_to(), e.get_weight());
+        }
+    }
+
+    violations->clear();
+    int cost = objective_function(&temp, violations);
+    return static_cast<double>(cost);
 }
 
 // saves the graph data in a file following DYMACS format
@@ -253,6 +263,19 @@ int graph_t::save(){
     return 0;
 }
 
+void graph_t::set_vertices(const std::vector<vertex_t>& new_vertices) {
+    if (new_vertices.size() != _vertices.size()) {
+        std::cerr << "[set_vertices] Error: número de vértices no coincide. "
+                  << "Esperado: " << _vertices.size()
+                  << ", recibido: " << new_vertices.size() << std::endl;
+        return;
+    }
+
+    for (size_t i = 0; i < new_vertices.size(); ++i) {
+        int id = static_cast<int>(i);
+        modify_vertex(id, new_vertices[i].get_longitude(), new_vertices[i].get_latitude());
+    }
+}
 
 
 // Local Variables:

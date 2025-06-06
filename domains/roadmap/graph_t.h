@@ -160,6 +160,8 @@ public:
     // saves the graph data in a file following DYMACS format
     int save();
 
+    void set_vertices(const std::vector<vertex_t> &new_vertices);
+
 }; // class graph_t
 
 #endif // _GRAPH_T_H_

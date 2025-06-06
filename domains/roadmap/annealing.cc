@@ -15,41 +15,37 @@ using namespace std;
 // Computes the nomber of violations h(n) > g(n) for each node. Looking to
 // minimise the cost. Returns a double as the cost of modifying the new
 // node to the graph
-double objective_function(const graph_t *g, size_t idx_mod,
-                          const vertex_t &old_v,
+double objective_function(const graph_t *g,
                           std::unordered_map<int, int> *violations) {
   size_t N = g->get_nbvertices();
   violations->clear(); // clean the shit out of prev iter
 
-  int total_violations = 0;
+  double total_violation_magnitude = 0.0;
+  double dist_error = 0.0;
 
-  // counting iters
-  for (size_t u = 0; u < N; ++u) {
-    vertex_t vu = g->get_vertex(u);
-    for (const auto &e : g->get_edges(u)) {
-      size_t v = e.get_to();
-      int w = e.get_weight();
-      vertex_t vv = g->get_vertex(v);
+  for (size_t n = 0; n < N; ++n) {
+    vertex_t v = g->get_vertex(n);
+    vector<edge_t> neighbors = g->get_edges(n);
 
-      double h = great_circle_distance(vu, vv);
-      double diff = h - static_cast<double>(w);
+    for (const auto &neighbor : neighbors) {
+      size_t n_neighbor = neighbor.get_to();
+      int w_neighbor = neighbor.get_weight();
+      vertex_t v_neighbor = g->get_vertex(n_neighbor);
+
+      double h = great_circle_distance(v, v_neighbor);
+      double diff = h - w_neighbor;
 
       if (diff > EPS) {
-        ++(*violations)[static_cast<int>(u)];
-        ++total_violations;
+        (*violations)[static_cast<int>(n)]++;
+        (*violations)[static_cast<int>(n_neighbor)]++;
+        total_violation_magnitude += diff;
       }
+
+      dist_error += std::max(0.0, diff);
     }
   }
 
-  // maybe mse? idk, want to try with this
-  double mutation_error = 0.0;
-  if (idx_mod < N) {
-    vertex_t mod_v = g->get_vertex(idx_mod);
-    mutation_error = great_circle_distance(old_v, mod_v);
-  }
-
-  // ponderated weight
-  return W_VIOL * total_violations + W_DIST * mutation_error;
+  return W_VIOL * total_violation_magnitude + W_DIST * dist_error;
 }
 
 // Returns the probability of accepting a mutated state as the next state, if
@@ -62,99 +58,86 @@ double acceptance_criteria(int new_cost, int old_cost, double t_current) {
 // everything went correctly, -1 otherwise. It creates a new directory with the
 // new files for graph processing (again following the dymacs version)
 int annealing(graph_t &graph) {
-  using std::cout;
-  using std::endl;
-  using std::size_t;
-
-  // mapa id -> number of violations
-  std::unordered_map<int, int> violations;
-
-  size_t N = graph.get_nbvertices();
+  int N = graph.get_nbvertices();
   if (N == 0)
     return -1;
 
-  // calculate initial graph violations
-  violations.clear();
-  int total_viol = 0;
-  for (size_t u = 0; u < N; ++u) {
-    vertex_t vu = graph.get_vertex(u);
-    for (const auto &e : graph.get_edges(u)) {
-      size_t v = e.get_to();
-      int w = e.get_weight();
-      vertex_t vv = graph.get_vertex(v);
+  // Evaluate initial cost and violations
+  std::unordered_map<int, int> violations;
+  double old_cost = graph.evaluate(&violations);
+  double best_cost = old_cost;
+  auto best_vertices = graph.get_vertices();
 
-      double h = great_circle_distance(vu, vv);
-      double diff = h - static_cast<double>(w);
-      if (diff > EPS) {
-        ++violations[static_cast<int>(u)];
-        ++total_viol;
-      }
-    }
-  }
+  std::cout << "[annealing] Initial cost: " << old_cost
+            << " | Initial violations: " << violations.size() << std::endl;
 
-  // no mutate graph, no diff applied
-  double old_cost = W_VIOL * total_viol;
+  // Initial temperature
+  double T = std::max(100.0, old_cost);
+  const double init_T = T;
 
-  cout << "[annealing] Number of violations in initial iteration: "
-       << violations.size() << endl;
+  // Random generators
+  std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
+  std::uniform_real_distribution<double> uni01(0.0, 1.0);
+  std::uniform_int_distribution<int> uniNode(0, N - 1);
 
-  // init temp, in case there are low violations and tons of nodes
-  double T = std::max(1, static_cast<int>(old_cost));
-
-  std::mt19937_64 rng(
-      std::chrono::steady_clock::now().time_since_epoch().count());
-
-  // main SA
+  // Simulated Annealing main loop
   for (int iter = 0; iter < MAX_ITERS && T > 1e-6; ++iter) {
+    // Pick a node to mutate
+    std::vector<int> conflicted;
+    conflicted.reserve(violations.size());
+    for (const auto &[nid, cnt] : violations)
+      if (cnt > 0)
+        conflicted.push_back(nid);
 
-    int max_key = -1; // node_id
-    int max_value = std::numeric_limits<int>::min();
+    int node_id = conflicted.empty() ? uniNode(rng)
+                                     : conflicted[rng() % conflicted.size()];
 
-    for (const auto &pair : violations) {
-      if (pair.second > max_value) {
-        max_value = pair.second;
-        max_key = pair.first;
-      }
-    }
+    // Mutate and evaluate
+    auto [nid, old_v] = graph.mutate(node_id);
+    double new_cost = graph.evaluate(&violations);
 
-    // mutate
-    auto change = graph.mutate(max_key);
-    int node_id = change.first;
-    vertex_t old_v = change.second;
-
-    // evaluate:
-    double new_cost = graph.evaluate(change, &violations);
-
-    // decide if the modification is accepted or not
-    std::uniform_real_distribution<double> uni01(0.0, 1.0);
-
+    bool accepted = false;
     if (new_cost < old_cost ||
         uni01(rng) < acceptance_criteria(new_cost, old_cost, T)) {
       // accept mutation
       old_cost = new_cost;
+      accepted = true;
+
+      if (new_cost < best_cost) {
+        best_cost = new_cost;
+        best_vertices = graph.get_vertices();
+      }
     } else {
-      // recover the prev node
-      graph.modify_vertex(node_id, old_v.get_longitude(), old_v.get_latitude());
+      // Restore previous vertex
+      int casted_nid = static_cast<int>(nid);
+      graph.modify_vertex(casted_nid, old_v.get_longitude(), old_v.get_latitude());
     }
 
-    // this shit is burning, cool it
+    // Cooling
     T *= COOLING_RATE;
 
-    // no violations, stop
-    if (old_cost == 0)
-      break;
-  }
+    // Logging every 10 iterations
+    if (iter % 10 == 0) {
+      std::cout << "[annealing] Iteration " << iter
+                << " | Cost: " << old_cost
+                << " | Best: " << best_cost
+                << " | Violations: " << violations.size()
+                << " | Temp: " << T
+                << " | " << (accepted ? "Accepted" : "Rejected")
+                << std::endl;
+    }
 
-  // count final_violations
-  int violations_counter = 0;
-  for (const auto &pair : violations) {
-    if (pair.second != 0) {
-      ++violations_counter;
+    // Early exit
+    if (old_cost == 0) {
+      std::cout << "[annealing] Perfect solution found at iteration " << iter << "!" << std::endl;
+      break;
     }
   }
 
-  cout << "[annealing output] There are " << violations_counter
-       << " nodes still violating in the new graph!" << endl;
+  // Restore best solution
+  graph.set_vertices(best_vertices);
+  std::cout << "[annealing] Final best cost: " << best_cost
+            << " | Final violations: " << violations.size() << std::endl;
 
   return 0;
 }
