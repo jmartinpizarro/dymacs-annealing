@@ -10,8 +10,7 @@ constexpr int BATCHES = 10000; // maximum size of any subgraph
 
 // Computes the number of h(n) violations. Returns the total number of 
 // violations in the subgraph and the violations that each node has.
-double objective_function(const graph_t *g, size_t idx_mod,
-                          const vertex_t &old_v,
+double objective_function(const graph_t *g,
                           std::unordered_map<int, int> *violations);
 
 // Returns the probability of accepting a mutated state as the next state, if 

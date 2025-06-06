@@ -154,8 +154,7 @@ public:
     std::pair<size_t,vertex_t> mutate(int node_id);
     // evaluates an state in order to detect if mutation has been useful
     // or not
-    double evaluate(const std::pair<size_t, vertex_t> &change,
-                    std::unordered_map<int,int> *violations);
+    double evaluate(std::unordered_map<int,int> *violations);
 
     // saves the graph data in a file following DYMACS format
     int save();
