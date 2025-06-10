@@ -124,16 +124,6 @@ int main (int argc, char** argv) {
     roadmap_t::init (graph_name, coordinates, variant);
     auto nbedges = roadmap_t::get_graph ().get_nbedges ();
 
-    // open the given file and retrieve all cases from it
-    vector<instance_t<roadmap_t>> instances;
-    get_testcases (filename, instances);
-    if (!instances.size ()) {
-        cerr << endl;
-        cerr << " Error: The file '" << filename << "' contains no instances to solve!" << endl;
-        cerr << endl;
-        exit (EXIT_FAILURE);
-    }
-
     graph_t graph;
     graph.load(graph_name, coordinates);
 
