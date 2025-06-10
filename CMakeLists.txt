@@ -10,7 +10,6 @@ set(CMAKE_CXX_STANDARD 20)
 option(DISABLE_TESTS "Disable the compilation of the unit tests")
 
 # Recurse into the src/, domains/ and tests/ subdirectories
-add_subdirectory (src)
 add_subdirectory (domains)
 
 # print message warning that memory detection will not work on non-unix systems
