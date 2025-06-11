@@ -204,28 +204,9 @@ std::pair<size_t, vertex_t> graph_t::mutate(int node_id) {
 // evaluates an state in order to detect if mutation has been useful
 // or not
 double graph_t::evaluate(std::unordered_map<int,int>* violations) {
-    // reconstruct the graph class
-    graph_t temp;
-    size_t N = _vertices.size();
-    for (int i = 0; i < N; ++i) {
-
-        temp.add_vertex(i);
-        temp.modify_vertex(i,
-            _vertices[i].get_longitude(),
-            _vertices[i].get_latitude()
-        );
-    }
-
-    for (size_t u = 0; u < N; ++u) {
-
-        for (auto const& e : _edges[u]) {
-            temp.add_edge(u, e.get_to(), e.get_weight());
-        }
-    }
-
     violations->clear();
-    int cost = objective_function(&temp, violations);
-    return static_cast<double>(cost);
+    double cost = objective_function(this, violations);
+    return cost;
 }
 
 // saves the graph data in a file following DYMACS format

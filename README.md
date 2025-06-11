@@ -47,6 +47,16 @@ Execution example with the NY dataset.
   --graph domains/roadmap/benchmark/USA-road-d.NY.gr
 ```
 
+# Debug #
+
+Using lldb, you can execute:
+
+```bash
+lldb domains/roadmap/roadmap
+target create ./domains/roadmap/roadmap
+process launch -- --graph domains/roadmap/benchmark/USA-road-d.NY.gr
+```
+
 # Tests #
 
 This library comes with a number of unit tests that have been implemented with

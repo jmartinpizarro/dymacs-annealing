@@ -113,6 +113,7 @@ int main (int argc, char** argv) {
 
     // --graph
     if (graph_name == "") {
+        cerr << "DEBUG: graph_name = '" << graph_name << "'\n";
         cerr << "\n Please, provide a filename with the description of the graph" << endl;
         cerr << " See " << program_name << " --help for more details" << endl << endl;
         exit(EXIT_FAILURE);

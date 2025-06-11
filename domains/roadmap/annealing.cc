@@ -4,6 +4,8 @@
 #include <iostream>
 #include <random>
 #include <unordered_map>
+#include <iomanip>
+#include <unistd.h>
 
 #include "annealing.h"
 #include "graph_t.h"
@@ -23,7 +25,7 @@ double objective_function(const graph_t *g,
   double total_violation_magnitude = 0.0;
   double dist_error = 0.0;
 
-  for (size_t n = 0; n < N; ++n) {
+  for (size_t n = 1; n < N; ++n) { // idk but there is node 0 = 0.0 0.0
     vertex_t v = g->get_vertex(n);
     vector<edge_t> neighbors = g->get_edges(n);
 
@@ -35,10 +37,11 @@ double objective_function(const graph_t *g,
       double h = great_circle_distance(v, v_neighbor);
       double diff = h - w_neighbor;
 
-      if (diff > EPS) {
+      if (diff > 0.0) { // diff is positive, then h(n) > g(n)
+        cout << "[DEBUG] Violation in the heuristic between the nodes " << 
+                n << " - " << n_neighbor << endl;
         (*violations)[static_cast<int>(n)]++;
-        (*violations)[static_cast<int>(n_neighbor)]++;
-        total_violation_magnitude += diff;
+        total_violation_magnitude += 1;
       }
 
       dist_error += std::max(0.0, diff);
@@ -62,82 +65,81 @@ int annealing(graph_t &graph) {
   if (N == 0)
     return -1;
 
-  // Evaluate initial cost and violations
-  std::unordered_map<int, int> violations;
-  double old_cost = graph.evaluate(&violations);
-  double best_cost = old_cost;
-  auto best_vertices = graph.get_vertices();
+  // we are looking for to minimise the total cost of the graph, composed of the
+  // total number of violations ponderated using the objective function. Thus,
+  // we have an initial solution that we want to improve
+  unordered_map<int, int> violations; // <nodeId, number of violations>
+  double cost = graph.evaluate(&violations);
+  cout << cost << endl;
 
-  std::cout << "[annealing] Initial cost: " << old_cost
-            << " | Initial violations: " << violations.size() << std::endl;
+  cout << "[LOGGING] Initial Information data:" << endl
+          << "\tTotal of violations found: " << violations.size() << endl
+          << "\tInitial cost to minimise: " << cost << endl;
 
-  // Initial temperature
-  double T = std::max(100.0, old_cost);
-  const double init_T = T;
+  if (violations.size() == 0) {
+    cout << "[LOGGING] Annealing ended. No more violations in the graph." 
+            << endl;
+    return 0;
+  }
 
-  // Random generators
+  // initial temperature
+  double T = max(100000.0, cost); 
+    
+  // for the acceptance criteria
   std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   std::uniform_real_distribution<double> uni01(0.0, 1.0);
-  std::uniform_int_distribution<int> uniNode(0, N - 1);
 
-  // Simulated Annealing main loop
-  for (int iter = 0; iter < MAX_ITERS && T > 1e-6; ++iter) {
-    // Pick a node to mutate
-    std::vector<int> conflicted;
-    conflicted.reserve(violations.size());
-    for (const auto &[nid, cnt] : violations)
-      if (cnt > 0)
-        conflicted.push_back(nid);
+  // simulated annealing main loop
+  for (int iter = 0; iter <= MAX_ITERS && T >= 1e-8; iter++) {
 
-    int node_id = conflicted.empty() ? uniNode(rng)
-                                     : conflicted[rng() % conflicted.size()];
+    // pick a random node based on probabilities. The more violations, the more
+    // probabilities it will have. However, it is allowed to select nodes with
+    // fewer violations 
+    vector<int> conflicted;
+    for (const auto& [node, vcount] : violations) {
+        for (int i = 0; i < vcount; ++i)
+            conflicted.push_back(node);
+    }
 
-    // Mutate and evaluate
-    auto [nid, old_v] = graph.mutate(node_id);
+    // random number generator setter
+    static random_device rd;
+    static mt19937 gen(rd());
+    uniform_int_distribution<> dis(0, conflicted.size() - 1);
+
+    int selectedNodeId = conflicted[dis(gen)];
+
+    auto [nid, old_v] = graph.mutate(selectedNodeId);
     double new_cost = graph.evaluate(&violations);
 
+    if (violations.size() == 0) {
+      cout << "[LOGGING] New cost is: " << new_cost << endl;
+      cout << "[LOGGING] Annealing ended. No more violations in the graph." 
+            << endl;
+      return 0;
+    }
+
+    //sleep(1);
+    cout << endl << "Node selected: " << nid << " with a cost of " 
+            << new_cost << endl;
+
     bool accepted = false;
-    if (new_cost < old_cost ||
-        uni01(rng) < acceptance_criteria(new_cost, old_cost, T)) {
+    if (new_cost < cost ||
+        uni01(rng) < acceptance_criteria(new_cost, cost, T)) {
       // accept mutation
-      old_cost = new_cost;
+      cost = new_cost;
       accepted = true;
 
-      if (new_cost < best_cost) {
-        best_cost = new_cost;
-        best_vertices = graph.get_vertices();
-      }
     } else {
       // Restore previous vertex
       int casted_nid = static_cast<int>(nid);
       graph.modify_vertex(casted_nid, old_v.get_longitude(), old_v.get_latitude());
     }
 
-    // Cooling
+    // cool temperature
     T *= COOLING_RATE;
-
-    // Logging every 10 iterations
-    if (iter % 10 == 0) {
-      std::cout << "[annealing] Iteration " << iter
-                << " | Cost: " << old_cost
-                << " | Best: " << best_cost
-                << " | Violations: " << violations.size()
-                << " | Temp: " << T
-                << " | " << (accepted ? "Accepted" : "Rejected")
-                << std::endl;
-    }
-
-    // Early exit
-    if (old_cost == 0) {
-      std::cout << "[annealing] Perfect solution found at iteration " << iter << "!" << std::endl;
-      break;
-    }
   }
 
-  // Restore best solution
-  graph.set_vertices(best_vertices);
-  std::cout << "[annealing] Final best cost: " << best_cost
-            << " | Final violations: " << violations.size() << std::endl;
-
-  return 0;
+  cout << "[LOGGING] Total number of violations in final iteration: " 
+          << violations.size() << endl;
+  return violations.size();
 }
