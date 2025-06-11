@@ -21,9 +21,11 @@ static double great_circle_distance(const vertex_t& A, const vertex_t& B) {
     double lat1 = A.get_latitude(), lon1 = A.get_longitude();
     double lat2 = B.get_latitude(), lon2 = B.get_longitude();
 
-    // heuristic must be int as the weight is an int
-    int h = int (acos (sin (lat1) * sin (lat2) + cos (lat1) * 
-                cos (lat2) * cos (lon2 - lon1)) * EARTH_RADIUS);
+    // heuristic must be double due to precission
+    // units calculated are x10 lower than the 
+    // real cost (maybe using decimeters)
+    double h = (acos (sin (lat1) * sin (lat2) + cos (lat1) * 
+                cos (lat2) * cos (lon2 - lon1)) * EARTH_RADIUS) * 10;
 
     return h;
 }

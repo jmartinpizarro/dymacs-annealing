@@ -46,3 +46,6 @@ __pycache__
 TAGS
 USA-*
 build/*
+
+*.DS_Store
+.vscode
