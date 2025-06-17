@@ -157,7 +157,7 @@ public:
     double evaluate(std::unordered_map<int,int> *violations);
 
     // saves the graph data in a file following DYMACS format
-    int save();
+    int save(std::string fileName);
 
     void set_vertices(const std::vector<vertex_t> &new_vertices);
 

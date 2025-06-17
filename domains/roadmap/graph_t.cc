@@ -210,11 +210,14 @@ double graph_t::evaluate(std::unordered_map<int,int>* violations) {
 }
 
 // saves the graph data in a file following DYMACS format
-int graph_t::save(){
+int graph_t::save(string fileName){
 
     // file name
-    const std::string filename = "domains/roadmap/benchmark/USA-road-d.NY.fix.co";
-    std::ofstream out{ filename };
+    if (fileName.length() >= 2) {
+        fileName.insert(fileName.length() - 2, "fix.");
+    }
+
+    std::ofstream out{ fileName };
     if (!out.is_open()) {
         return -1;
     }
@@ -222,11 +225,17 @@ int graph_t::save(){
     // n vertex
     size_t N = get_nbvertices();
 
-    out << "c Graph coordinates saved by graph_t::save()\n";
-    out << "p aux sp_co " << N << "\n";
+    out << "c 9th DIMACS Implementation Challenge: Shortest Paths\n";
+    out << "c http://www.dis.uniroma1.it/~challenge9\n";
+    out << "c TIGER/Line nodes coords for graph USA-road-d.NY\n";
+    out << "c Dataset Coordinates File fixed by Simmulated Annealing, jmartinpizarro\n";
+    out << "c\n";
+    out << "p aux sp co " << N << endl;
+    out << "c graph contains " << N << " nodes\n";
+    out << "c\n";
 
     // for each vertex
-    for (size_t idx = 0; idx < N; ++idx) {
+    for (size_t idx = 1; idx < N; ++idx) {
         vertex_t v = get_vertex(idx);
 
         // radians -> degrees

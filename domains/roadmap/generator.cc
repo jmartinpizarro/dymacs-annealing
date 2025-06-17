@@ -315,7 +315,7 @@ bool get_coordinates (const string& coordinates_filename,
             lineno++;
 
         } else {
-
+            
             // otherwise, a syntax error has been found
             cerr << " Syntax error in '" << coordinates_filename << "'::" << lineno << endl;
             return false;

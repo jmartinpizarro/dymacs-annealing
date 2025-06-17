@@ -83,14 +83,15 @@ int annealing(graph_t &graph) {
   }
 
   // initial temperature
-  double T = max(100000.0, cost); 
+  double T = max(MIN_COSt, cost); 
+  T *= 10;
     
   // for the acceptance criteria
   std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   std::uniform_real_distribution<double> uni01(0.0, 1.0);
 
   // simulated annealing main loop
-  for (int iter = 0; iter <= MAX_ITERS && T >= 1e-8; iter++) {
+  for (int iter = 0; iter <= MAX_ITERS && T >= MIN_TEMP_LIMIT; iter++) {
 
     // pick a random node based on probabilities. The more violations, the more
     // probabilities it will have. However, it is allowed to select nodes with

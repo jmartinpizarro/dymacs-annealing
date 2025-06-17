@@ -154,15 +154,11 @@ int main (int argc, char** argv) {
             << " seconds" << endl;
     cout << endl;
     
-    graph.save();
+    graph.save(coordinates_name);
     /* !-------------------------------------------------------------------! */
 
     // Well done! Keep up the good job!
     return (EXIT_OK);
-}
-
-void generate_merged_dataset(graph_t& graph) {
-    // TODO
 }
 
 // return the domain of this solver
