@@ -26,7 +26,6 @@
 
 #include <getopt.h>
 
-#include "../solver.h"
 #include "../../src/ksearch.h"
 
 #include "graph_t.h"
@@ -49,31 +48,14 @@ char *program_name;                       // The name the program was run with,
 static struct option const long_options[] =
 {
     {"graph", required_argument, 0, 'g'},
-    {"solver", required_argument, 0, 's'},
-    {"file", required_argument, 0, 'f'},
-    {"variant", required_argument, 0, 'r'},
-    {"k", required_argument, 0, 'k'},
-    {"csv", required_argument, 0, 'C'},
-    {"no-doctor", no_argument, 0, 'D'},
-    {"summary", no_argument, 0, 'S'},
-    {"verbose", no_argument, 0, 'v'},
-    {"help", no_argument, 0, 'h'},
-    {"version", no_argument, 0, 'V'},
     {NULL, 0, NULL, 0}
 };
 
-void generate_merged_dataset(graph_t& graph);
-const string get_domain ();
-const string get_variant ();
-bool brute_force (const string& solver_name);
-void get_testcases (const string& filename, vector<instance_t<roadmap_t>>& instances);
 bool get_coordinates_filename (const string& filename, string& coordinates_filename);
 bool get_coordinates (const string& coordinates_filename,
                       map<int, pair<double, double>>& coordinates);
 static int decode_switches (int argc, char **argv,
-                            string& graph_name, string& solver_name, string& filename, string& variant,
-                            string& k_params, string& csvname, bool& no_doctor, bool& want_summary,
-                            bool& want_verbose);
+                            string& graph_name);
 static void usage (int status);
 
 // main entry point
@@ -97,7 +79,7 @@ int main (int argc, char** argv) {
     vector<string> variant_choices = {"unit", "dimacs"};
 
     // arg parse
-    decode_switches (argc, argv, graph_name, solver_name, filename, variant, k_params, csvname, no_doctor, want_summary, want_verbose);
+    decode_switches (argc, argv, graph_name);
 
     // get the coordinates filename from the graph name
     if (!get_coordinates_filename (graph_name, coordinates_name)) {
@@ -161,77 +143,6 @@ int main (int argc, char** argv) {
     return (EXIT_OK);
 }
 
-// return the domain of this solver
-const string get_domain () {
-    return "roadmap";
-}
-
-// return the variant of the domain of this solver
-const string get_variant () {
-    return "dimacs";
-}
-
-// given the name of a solver, it returns true if it is a brute-force variant,
-// and false otherwise. The name of the brute-force search algorithms are stored
-// in a separate set
-bool brute_force (const string& solver_name) {
-    return find (brute_force_solvers.begin (),
-                 brute_force_solvers.end (),
-                 solver_name) != brute_force_solvers.end ();
-}
-
-
-// open the specified filename and retrieve the name of every instance (assigned
-// as an integer from 0 onwards) and a vector of strings with the contents of
-// each case, i.e., the start and goal vertices separated by a blank space
-void get_testcases (const string& filename, vector<instance_t<roadmap_t>>& instances) {
-
-   ifstream stream (filename);
-
-   // read both lines and store its contents in two separated vectors. The first
-   // line contains all the starting vertices whereas the second line contains
-   // all goals
-   int lineno = 0;                          // line number: 0->starts; 1->goals
-   string line;
-   vector<string> starts, goals;
-   while (getline (stream, line)) {
-
-       // create a regexp to split this line
-       regex regex ("\\s+");
-       sregex_token_iterator it (line.begin (), line.end (), regex, -1);
-       sregex_token_iterator end;
-
-       // and now process each token separately
-       for ( ; it != end ; ++it) {
-           if (lineno == 0) {                                   // start states
-               starts.push_back (*it);
-           } else if (lineno == 1) {                             // goal states
-               goals.push_back (*it);
-           } else {
-               cerr << " Syntax error: the file with the tests cases should consist of two lines only" << endl;
-               cerr << "               See the documentation for more information" << endl << endl;
-               exit(EXIT_FAILURE);
-           }
-       }
-
-       // increment the line counter
-       lineno += 1;
-   }
-
-   // verify there are the same number of start and goal states
-   if (starts.size () != goals.size ()) {
-       cerr << " Syntax error: The file with the test cases must contain the same number of start and goal states" << endl;
-       cerr << "               See the documentation for more information" << endl << endl;
-       exit(EXIT_FAILURE);
-   }
-
-   // now, create a vector with the information of each instance
-   for (auto i = 0 ; i < starts.size () ; i++) {
-       instances.push_back (instance_t{to_string (i),
-           roadmap_t {size_t (stoll (starts[i]))},
-           roadmap_t {size_t (stoll (goals[i]))}});
-   }
-}
 
 // return true if the coordinates file of the given graph exists and is
 // readable. If true, the name of the coordinates file is returned in the second
@@ -331,75 +242,20 @@ bool get_coordinates (const string& coordinates_filename,
 // index of the first non-option argument
 static int
 decode_switches (int argc, char **argv,
-                 string& graph_name, string& solver_name, string& filename, string& variant,
-                 string& k_params, string& csvname, bool& no_doctor, bool& want_summary,
-                 bool& want_verbose) {
+                 string& graph_name) {
 
     int c;
 
     // Default values
     graph_name = "";
-    solver_name = "";
-    filename = "";
-    variant = "dimacs";
-    k_params = "";
-    csvname = "";
-    no_doctor = false;
-    want_summary = false;
-    want_verbose = false;
 
     while ((c = getopt_long (argc, argv,
-                             "g"  /* graph */
-                             "s"  /* solver */
-                             "f"  /* file */
-                             "r"  /* variant */
-                             "k"  /* k */
-                             "C"  /* csv */
-                             "S"  /* summary */
-                             "D"  /* no-doctor */
-                             "v"  /* verbose */
-                             "h"  /* help */
-                             "V", /* version */
+                             "g",
                              long_options, (int *) 0)) != EOF) {
         switch (c) {
         case 'g':  /* --graph */
             graph_name = optarg;
             break;
-        case 's':  /* --solver */
-            solver_name = optarg;
-            break;
-        case 'f':  /* --file */
-            filename = optarg;
-            break;
-        case 'r': /* --variant */
-            variant = optarg;
-            break;
-        case 'k':  /* --k */
-            k_params = optarg;
-            break;
-        case 'C':  /* --csv */
-            csvname = optarg;
-            break;
-        case 'D':  /* --no-doctor */
-            no_doctor = true;
-            break;
-        case 'S':  /* --summary */
-            want_summary = true;
-            break;
-        case 'v':  /* --verbose */
-            want_verbose = true;
-            break;
-        case 'V':
-            cout << " khs (" << get_domain () << ") " << CMAKE_VERSION << endl;
-            cout << " " << CMAKE_BUILD_TYPE << " Build Type" << endl << endl;
-
-            // show cpu and mem info
-            cout << get_cpu_info() << endl;
-            cout << get_mem_info() << endl;
-
-            exit (EXIT_OK);
-        case 'h':
-            usage (EXIT_OK);
         default:
             cout << endl << " Unknown argument!" << endl;
             usage (EXIT_FAILURE);
@@ -408,7 +264,7 @@ decode_switches (int argc, char **argv,
     return optind;
 }
 
-
+// TO MODIFY / REMOVE
 static void
 usage (int status)
 {
