@@ -1,18 +1,11 @@
 # Introduction #
 
-This library implements a number of search algorithms to compute *K*
-(non-simple) optimal paths. It provides both *brute-force* and *heuristic*
-search algorithms. It also comes with a number of domain-dependent solvers that
-test the performance of these algorithms
+This repository presents a solution for the DYMACS dataset. The problem of this 
+dataset is related with non-admissible heuristics when using Greatest Circle 
+Distance due to errors when collecting the information.
 
-# Dependencies #
-
-Tests have been created using the [Google Test
-Framework](https://github.com/google/googletest) which is necessary for both
-compiling and runing the tests, see below.
-
-In addition, a number of scripts are provided for various purposes. They all
-have been implemented in python 3.8.
+For solving this problem, a solution based on a Simmulated Annealing (SA) is 
+proposed.
 
 # Install #
 
@@ -57,73 +50,24 @@ target create ./domains/roadmap/roadmap
 process launch -- --graph domains/roadmap/benchmark/USA-road-d.NY.gr
 ```
 
-# Tests #
+# Dataset #
 
-This library comes with a number of unit tests that have been implemented with
-[Google Test](https://github.com/google/googletest). If Google Test is available
-in your computer, then you can compile and run the tests with:
+The roadmap domain is taken from the [9th DIMACS Implementation Challenge:
+Shortest Paths](http://www.diag.uniroma1.it/~challenge9/download.shtml#benchmark)
 
-``` sh
-    $ make gtest
-    $ tests/gtest
-```
-
-from the `ksearch/` directory created after the clone.
-
-# Search algorithms #
-
-The search algorithms provided in this library solve the *k* non-simple
-shortest-paths problem. It provides both brute-force and heuristic search
-algorithms:
-
-* Brute-force search algorithms:
-
-  + `mDijkstra`: It consists of expanding every node up to *k* times
-  + `K0`: Uninformed variant of K*
-  + `belA0`: it is the uninformed variant of BELA*
-
-* Heuristic search algorithms:
-
-  * `mA*`: Informed variant of mDijkstra
-  + `K*`: Original algorithm used for solving the K shortest-path problem with heuristics
-  + `belA*`: Algorithm used for solving the K shortest-path problem which is guaranteed to expand nodes only once
-
-# Domain-dependent solvers #
-
-This package comes with a number of domain-dependent solvers under `domains/`:
-
-* *2D Pathfinding*
-* *Grid*
-* *N-Pancake*
-* *N-Puzzle*
-* *Roadmap* 
-
-Every domain-dependent solver provides all the search algorithms described
-above. For further details, check out the documentation under `domains/`
-
-# Publications #
-
-* Linares López, Carlos; Herman, Ian, 2024. Evolving A* to Efficiently Solve the
-  k Shortest-Path Problem. Proceedings of the Twenty-Seventh European Conference
-  on Artificial Intelligence (ECAI 2024), pages 4352-4359. Santiago de Compostela (Spain).
-  
-An extended version of the same paper with an example of BELA0 and the results
-of all the empirical evaluation can be found at:
-
-* Linares López, Carlos; Herman, Ian, 2024. Evolving A* to Efficiently Solve the
-  k Shortest-Path Problem (Extended Version). arXiv 2024. eprint
-  [2408.08227](https://arxiv.org/abs/2408.08227).
-
-In addition, all the data used in the experimentation is available in Zenodo:
-
-* Linares López, C., & Herman, I. (2024). Experimental evaluation of BELA0/BELA* (ECAI 2024) (Data set). Evolving A* to Efficiently Solve the k Shortest-Path Problem (ECAI), Santiago de Compostela (Spain). Zenodo. https://doi.org/10.5281/zenodo.13293103
-  
+The available benchmarks are stored in the directory `benchmarks`. The graphs
+are suffixed with `.gr` where, every line consists of an edge identified by its
+two vertices represented with integer indices, and the third value is the edge
+cost. Data lines are preceded with `a` whereas comments are preceded with the
+hash symbol `#`. See the available
+[help](http://www.diag.uniroma1.it/~challenge9/format.shtml) for more
+information on the formats.
 
 # License #
 
 MIT License
 
-Copyright (c) 2016, 2023, Carlos Linares López, Ian Herman
+Copyright (c) 2025, Javier Martín
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -150,7 +94,7 @@ Carlos Linares Lopez <carlos.linares@uc3m.es>
 Computer Science and Engineering Department <https://www.inf.uc3m.es/en>  
 Universidad Carlos III de Madrid <https://www.uc3m.es/home>
 
-Ian Herman <iankherman@gmail.com>  
-Computer Science and Engineering Department https://www.inf.uc3m.es/en  
-Universidad Carlos III de Madrid https://www.uc3m.es/home
+Javier Martín Pizarro <jmartinpizarro04@gmail.com>  
+Computer Science and Engineering Department <https://www.inf.uc3m.es/en>  
+Universidad Carlos III de Madrid <https://www.uc3m.es/home>
 
