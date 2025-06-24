@@ -5,6 +5,8 @@
 #include <random>
 #include <unordered_map>
 #include <iomanip>
+#include <unordered_set>
+#include <queue>
 #include <unistd.h>
 
 #include "annealing.h"
@@ -83,9 +85,12 @@ int annealing(graph_t &graph) {
   }
 
   // initial temperature
-  double T = max(MIN_COSt, cost); 
-  T *= 10;
-    
+  double T = max(MIN_COST, cost); 
+
+  // tabulist: saves last X states in order to not repeat them for a while
+  unordered_set<std::string> tabuSet;
+  queue<std::string> tabuQueue; 
+
   // for the acceptance criteria
   std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
   std::uniform_real_distribution<double> uni01(0.0, 1.0);
@@ -124,20 +129,43 @@ int annealing(graph_t &graph) {
             << new_cost << endl;
 
     bool accepted = false;
-    if (new_cost < cost ||
-        uni01(rng) < acceptance_criteria(new_cost, cost, T)) {
-      // accept mutation
+    string state_hash = hash_graph_state(graph);
+
+    // check the state is not here
+    if (tabuSet.count(state_hash)) {
+      int casted_nid = static_cast<int>(nid);
+      graph.modify_vertex(casted_nid, old_v.get_longitude(), old_v.get_latitude());
+      continue; // skip this it
+    }
+
+    // if the mutation is better than the prev solution 
+    // (or probability fucks me) -> accept it
+    if (new_cost < cost || uni01(rng) < acceptance_criteria(new_cost, cost, T)) {
       cost = new_cost;
       accepted = true;
 
+      // register in the tabuList
+      tabuQueue.push(state_hash);
+      tabuSet.insert(state_hash);
+
+      if (tabuQueue.size() > TABU_LIST_MAX_SIZE) {
+        string oldest = tabuQueue.front();
+        tabuQueue.pop();
+        tabuSet.erase(oldest);
+      }
+
     } else {
-      // Restore previous vertex
+      // not accepted, restore it
       int casted_nid = static_cast<int>(nid);
       graph.modify_vertex(casted_nid, old_v.get_longitude(), old_v.get_latitude());
     }
 
-    // cool temperature
-    T *= COOLING_RATE;
+    // cool/reheat temperature depending on violations
+    if (T < LOW_TEMP_THRESHOLD && violations.size() < 500) {
+      T = T * REHEATING_FACTOR;
+    } else {
+      T *= COOLING_RATE;
+    }
   }
 
   cout << "[LOGGING] Total number of violations in final iteration: " 

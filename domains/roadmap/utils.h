@@ -1,12 +1,11 @@
-
-#include "graph_t.h"
+#include <sstream>
 #include <vector>
 #include <queue>
 #include <cmath>
 #include <limits>
 
-// for avoiding precision errors
-static constexpr double EPS = 1e-6;
+#include "graph_t.h"
+#include "parameters.h"
 
 // for Dijkstra with priority queue
 struct NodeDist {
@@ -62,4 +61,16 @@ static std::vector<double> dijkstra(const graph_t* g, size_t start) {
         }
     }
     return dist;
+}
+
+// Given a graph, hashes it in order to use it in a set
+inline std::string hash_graph_state(const graph_t& graph) {
+  std::ostringstream oss;
+  int N = graph.get_nbvertices();
+  for (int i = 1; i < N; ++i) {
+    vertex_t v = graph.get_vertex(i);
+    oss << std::fixed << std::setprecision(5)
+        << v.get_latitude() << "," << v.get_longitude() << ";";
+  }
+  return oss.str();
 }
